@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Vote, Share2, MapPin, Music, Loader2, Plus, Minus, ExternalLink, Trophy, ArrowLeft, Facebook, Twitter } from 'lucide-react';
+import { Vote, Share2, MapPin, Music, Loader2, Plus, Minus, ExternalLink, Trophy, ArrowLeft, Facebook, Twitter, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ContestantProfilePage() {
@@ -24,7 +24,7 @@ export default function ContestantProfilePage() {
   const [loading, setLoading] = useState(true);
   const [voteCount, setVoteCount] = useState(1);
   const [votingLoading, setVotingLoading] = useState(false);
-  const [votePrice, setVotePrice] = useState(5000);
+  const [pricePerVote, setPricePerVote] = useState(0.10); // USD
 
   useEffect(() => {
     fetchContestant();
@@ -53,7 +53,10 @@ export default function ContestantProfilePage() {
       const res = await fetch('/api/settings/public');
       if (res.ok) {
         const data = await res.json();
-        setVotePrice(data.votePrice || 5000);
+        // Convert from kobo to USD (rough: 1 USD = 1500 NGN)
+        const votePriceKobo = data.votePrice || 5000;
+        const priceUSD = Math.max(0.10, votePriceKobo / 100 / 15);
+        setPricePerVote(priceUSD);
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -73,26 +76,30 @@ export default function ContestantProfilePage() {
 
     setVotingLoading(true);
     try {
-      const res = await fetch('/api/votes/initialize', {
+      const res = await fetch('/api/paypal/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contestantId: params.id,
-          voteCount,
+          votesQty: voteCount,
+          roundId: activeRound._id,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to initialize payment');
+        throw new Error(data.error || 'Failed to create payment');
       }
 
-      // Redirect to Paystack
-      window.location.href = data.authorizationUrl;
+      // Redirect to PayPal
+      if (data.approvalUrl) {
+        window.location.href = data.approvalUrl;
+      } else {
+        throw new Error('No PayPal approval URL received');
+      }
     } catch (error) {
       toast.error(error.message);
-    } finally {
       setVotingLoading(false);
     }
   };
@@ -125,7 +132,7 @@ export default function ContestantProfilePage() {
     );
   }
 
-  const totalAmount = (votePrice * voteCount) / 100;
+  const totalAmount = pricePerVote * voteCount;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -287,28 +294,30 @@ export default function ContestantProfilePage() {
                     <div className="border-t pt-4">
                       <div className="flex justify-between text-sm text-gray-500 mb-1">
                         <span>Price per vote</span>
-                        <span>₦{(votePrice / 100).toLocaleString()}</span>
+                        <span>${pricePerVote.toFixed(2)} USD</span>
                       </div>
                       <div className="flex justify-between text-lg font-bold">
                         <span>Total</span>
-                        <span className="text-green-600">₦{totalAmount.toLocaleString()}</span>
+                        <span className="text-green-600">${totalAmount.toFixed(2)} USD</span>
                       </div>
                     </div>
 
                     <Button
-                      className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg"
+                      className="w-full bg-[#0070ba] hover:bg-[#003087] h-12 text-lg"
                       onClick={handleVote}
                       disabled={votingLoading}
                     >
                       {votingLoading ? (
                         <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Processing...</>
                       ) : (
-                        <><Vote className="w-5 h-5 mr-2" /> Pay & Vote Now</>
+                        <>
+                          <CreditCard className="w-5 h-5 mr-2" /> Pay with PayPal
+                        </>
                       )}
                     </Button>
 
                     <p className="text-xs text-center text-gray-500">
-                      Secure payment powered by Paystack
+                      Secure payment powered by PayPal
                     </p>
                   </>
                 )}
