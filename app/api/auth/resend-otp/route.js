@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import User from '@/lib/models/User';
-import { generateOTP, hashOTP, sendOTPEmail } from '@/lib/email';
+import { generateOTP, hashOTP, sendOTPEmail, isMockMode } from '@/lib/email';
 import { loginRateLimiter } from '@/lib/rate-limit';
 
 /**
  * POST /api/auth/resend-otp
  * Resend OTP code to user's email
  * Rate limited: max 3 resends per 10 minutes
+ * Cooldown: 60 seconds between resends
  * 
  * Body: { userId? | email? }
  */
@@ -60,17 +61,17 @@ export async function POST(request) {
       if (timeSinceLastSend < 60000) {
         const waitSeconds = Math.ceil((60000 - timeSinceLastSend) / 1000);
         return NextResponse.json(
-          { error: `Please wait ${waitSeconds} seconds before requesting a new code.` },
+          { 
+            error: `Please wait ${waitSeconds} seconds before requesting a new code.`,
+            waitSeconds,
+          },
           { status: 429 }
         );
       }
     }
 
-    // Generate new OTP
-    const otp = process.env.OTP_MODE === 'dev' 
-      ? process.env.DEV_OTP_CODE || '123456'
-      : generateOTP();
-    
+    // Generate new OTP (uses DEV_OTP_CODE in mock mode)
+    const otp = generateOTP();
     const otpHash = hashOTP(otp);
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
@@ -81,12 +82,12 @@ export async function POST(request) {
     user.otpLastSent = new Date();
     await user.save();
 
-    // Send OTP email
+    // Send OTP email (in mock mode, this logs to console)
     try {
       await sendOTPEmail({ to: user.email, otp, name: user.name });
     } catch (emailError) {
       console.error('Failed to send OTP email:', emailError);
-      if (process.env.OTP_MODE !== 'dev') {
+      if (!isMockMode()) {
         return NextResponse.json(
           { error: 'Failed to send verification email. Please try again.' },
           { status: 500 }
@@ -99,8 +100,9 @@ export async function POST(request) {
       message: 'Verification code sent to your email.',
     };
 
-    if (process.env.OTP_MODE === 'dev') {
-      response.devOtpHint = `Use code ${otp} for verification (dev mode)`;
+    if (isMockMode()) {
+      response.mockMode = true;
+      response.devOtpHint = `Use code ${otp} for verification (mock mode - check server logs)`;
     }
 
     return NextResponse.json(response);
