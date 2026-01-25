@@ -102,10 +102,10 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Build Africa One Voice (AOV) - a pan-African digital talent show with paid voting. Features include contestant registration, admin approval, voting rounds, Paystack payment integration, leaderboards, and admin dashboard."
+user_problem_statement: "Build Africa One Voice (AOV) - a pan-African digital talent show with paid voting. Features include contestant registration, admin approval, voting rounds, PayPal payment integration (sandbox mode), Email OTP verification, leaderboards, and admin dashboard."
 
 backend:
-  - task: "User Registration API"
+  - task: "User Registration API with Email OTP"
     implemented: true
     working: "NA"
     file: "/app/app/api/auth/register/route.js"
@@ -115,19 +115,31 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Implemented registration with email/password, phone, country, role selection (VOTER/CONTESTANT). Dev mode OTP."
+        comment: "Implemented registration with email/password, optional phone. OTP sent via email (mock mode logs to console). 6-digit OTP, 10 min expiry, max 5 attempts."
 
   - task: "OTP Verification API"
     implemented: true
     working: "NA"
     file: "/app/app/api/auth/verify-otp/route.js"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Dev mode uses 123456 as OTP. Structured for future SMS integration."
+        comment: "Verifies hashed OTP. Max 5 attempts, 10 min expiry. Uses DEV_OTP_CODE in mock mode."
+
+  - task: "Resend OTP API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/auth/resend-otp/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Resends OTP with 60-second cooldown between requests. Resets attempt count on resend."
 
   - task: "NextAuth Authentication"
     implemented: true
@@ -139,7 +151,43 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Credentials provider with email/password, role-based JWT tokens."
+        comment: "Credentials provider with email/password. Requires emailVerified=true to login (except admins)."
+
+  - task: "PayPal Create Order API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/paypal/create-order/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Creates PayPal order for vote purchases. Returns 503 if PayPal not configured. Uses sandbox mode."
+
+  - task: "PayPal Verify/Capture API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/paypal/verify-or-capture/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Verifies and captures PayPal payment. IDEMPOTENT - won't double credit votes for same order."
+
+  - task: "PayPal Webhook"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/paypal/webhook/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Handles PayPal webhook events. IDEMPOTENT processing. Signature verification skipped if webhook ID not set."
 
   - task: "Contestants CRUD API"
     implemented: true
@@ -164,42 +212,6 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "CRUD for voting rounds. Only one active round at a time."
-
-  - task: "Vote Initialization API"
-    implemented: true
-    working: "NA"
-    file: "/app/app/api/votes/initialize/route.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Initializes Paystack payment, creates pending transaction, rate limiting."
-
-  - task: "Vote Verification API"
-    implemented: true
-    working: "NA"
-    file: "/app/app/api/votes/verify/route.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Verifies payment with Paystack, idempotent processing, updates vote count."
-
-  - task: "Paystack Webhook"
-    implemented: true
-    working: "NA"
-    file: "/app/app/api/webhooks/paystack/route.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Signature verification, idempotent vote processing, amount validation."
 
   - task: "Leaderboard API"
     implemented: true
