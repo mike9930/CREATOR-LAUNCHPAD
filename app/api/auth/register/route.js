@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/db';
 import User from '@/lib/models/User';
 import { loginRateLimiter } from '@/lib/rate-limit';
-import { generateOTP, hashOTP, sendOTPEmail } from '@/lib/email';
+import { generateOTP, hashOTP, sendOTPEmail, isMockMode } from '@/lib/email';
 
 /**
  * POST /api/auth/register
@@ -73,11 +73,8 @@ export async function POST(request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Generate OTP
-    const otp = process.env.OTP_MODE === 'dev' 
-      ? process.env.DEV_OTP_CODE || '123456'
-      : generateOTP();
-    
+    // Generate OTP (uses DEV_OTP_CODE in mock mode)
+    const otp = generateOTP();
     const otpHash = hashOTP(otp);
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
@@ -96,13 +93,13 @@ export async function POST(request) {
       emailVerified: false,
     });
 
-    // Send OTP email
+    // Send OTP email (in mock mode, this logs to console)
     try {
       await sendOTPEmail({ to: email, otp, name });
     } catch (emailError) {
       console.error('Failed to send OTP email:', emailError);
-      // Don't fail registration if email fails in dev mode
-      if (process.env.OTP_MODE !== 'dev') {
+      // Don't fail registration if email fails in mock mode
+      if (!isMockMode()) {
         // Rollback user creation
         await User.findByIdAndDelete(user._id);
         return NextResponse.json(
@@ -120,9 +117,10 @@ export async function POST(request) {
       email: user.email,
     };
 
-    // In dev mode, include OTP hint
-    if (process.env.OTP_MODE === 'dev') {
-      response.devOtpHint = `Use code ${otp} for verification (dev mode)`;
+    // In mock mode, include OTP hint in response
+    if (isMockMode()) {
+      response.mockMode = true;
+      response.devOtpHint = `Use code ${otp} for verification (mock mode - check server logs)`;
     }
 
     return NextResponse.json(response, { status: 201 });
