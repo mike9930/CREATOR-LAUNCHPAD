@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -121,9 +122,15 @@ export default function RegisterPage() {
       <div className="flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full gradient-africa flex items-center justify-center mb-4">
-              <span className="text-white font-bold text-xl">A</span>
-            </div>
+            <Link href="/" className="mx-auto mb-4">
+              <Image
+                src="/images/aov-logo.png"
+                alt="Africa One Voice – Pan-African Talent Show"
+                width={80}
+                height={80}
+                className="h-20 w-auto mx-auto"
+              />
+            </Link>
             <CardTitle className="text-2xl">
               {step === 1 && 'Create Account'}
               {step === 2 && 'Verify Phone'}
