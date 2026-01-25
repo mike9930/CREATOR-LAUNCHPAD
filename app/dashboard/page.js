@@ -16,7 +16,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { User, Trophy, Vote, Edit, Save, Loader2, ExternalLink, BarChart3, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { AFRICAN_COUNTRIES, CATEGORIES } from '@/lib/helpers';
+import { AFRICAN_COUNTRIES, CATEGORIES } from '@/lib/constants';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
