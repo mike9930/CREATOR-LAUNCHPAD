@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,9 +31,14 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-full gradient-africa flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <Image
+              src="/images/aov-logo.png"
+              alt="Africa One Voice – Pan-African Talent Show"
+              width={48}
+              height={48}
+              className="h-12 w-auto"
+              priority
+            />
             <span className="font-bold text-xl hidden sm:block">
               <span className="text-green-600">Africa</span>
               <span className="text-yellow-500"> One</span>
