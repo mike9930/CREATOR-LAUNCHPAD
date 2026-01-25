@@ -101,3 +101,170 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Build Africa One Voice (AOV) - a pan-African digital talent show with paid voting. Features include contestant registration, admin approval, voting rounds, Paystack payment integration, leaderboards, and admin dashboard."
+
+backend:
+  - task: "User Registration API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/auth/register/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented registration with email/password, phone, country, role selection (VOTER/CONTESTANT). Dev mode OTP."
+
+  - task: "OTP Verification API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/auth/verify-otp/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Dev mode uses 123456 as OTP. Structured for future SMS integration."
+
+  - task: "NextAuth Authentication"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/auth/[...nextauth]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Credentials provider with email/password, role-based JWT tokens."
+
+  - task: "Contestants CRUD API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/contestants/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET list, POST create, PUT update with filters, pagination, search."
+
+  - task: "Rounds Management API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/rounds/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CRUD for voting rounds. Only one active round at a time."
+
+  - task: "Vote Initialization API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/votes/initialize/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Initializes Paystack payment, creates pending transaction, rate limiting."
+
+  - task: "Vote Verification API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/votes/verify/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Verifies payment with Paystack, idempotent processing, updates vote count."
+
+  - task: "Paystack Webhook"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/webhooks/paystack/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Signature verification, idempotent vote processing, amount validation."
+
+  - task: "Leaderboard API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/leaderboard/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Per-round and overall leaderboard with filters. Falls back to total votes."
+
+  - task: "Admin Stats API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/admin/stats/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Dashboard stats: revenue, votes, pending approvals, flagged transactions."
+
+  - task: "Admin Contestants API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/admin/contestants/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "List, approve, reject, freeze contestants with audit logging."
+
+  - task: "Admin Settings API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/admin/settings/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Get/update vote price, currency, prize pool, site settings."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "User Registration API"
+    - "NextAuth Authentication"
+    - "Contestants CRUD API"
+    - "Leaderboard API"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Completed initial MVP implementation of AOV talent show platform. Database seeded with 10 contestants, 1 admin, 1 voter, and 1 active round. Please test the core APIs: registration, auth, contestants, and leaderboard. Admin email: admin@africaonevoice.com, password: admin123. Voter email: voter@test.com, password: voter123."
