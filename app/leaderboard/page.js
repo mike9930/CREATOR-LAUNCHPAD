@@ -95,12 +95,12 @@ export default function LeaderboardPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4">
-              <Select value={selectedRound} onValueChange={setSelectedRound}>
+              <Select value={selectedRound || 'current'} onValueChange={(v) => setSelectedRound(v === 'current' ? '' : v)}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="Current Round" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Current Round</SelectItem>
+                  <SelectItem value="current">Current Round</SelectItem>
                   {rounds.map((round) => (
                     <SelectItem key={round._id} value={round._id}>
                       {round.name}
@@ -108,23 +108,23 @@ export default function LeaderboardPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category || 'all'} onValueChange={(v) => setCategory(v === 'all' ? '' : v)}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={country} onValueChange={setCountry}>
+              <Select value={country || 'all'} onValueChange={(v) => setCountry(v === 'all' ? '' : v)}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="All Countries" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Countries</SelectItem>
+                  <SelectItem value="all">All Countries</SelectItem>
                   {AFRICAN_COUNTRIES.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
