@@ -263,20 +263,24 @@ backend:
 
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 0
+  version: "2.0"
+  test_sequence: 1
   run_ui: false
 
 test_plan:
   current_focus:
-    - "User Registration API"
+    - "User Registration API with Email OTP"
+    - "OTP Verification API"
+    - "Resend OTP API"
     - "NextAuth Authentication"
+    - "PayPal Create Order API"
+    - "PayPal Verify/Capture API"
     - "Contestants CRUD API"
     - "Leaderboard API"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Completed initial MVP implementation of AOV talent show platform. Database seeded with 10 contestants, 1 admin, 1 voter, and 1 active round. Please test the core APIs: registration, auth, contestants, and leaderboard. Admin email: admin@africaonevoice.com, password: admin123. Voter email: voter@test.com, password: voter123."
+    message: "Phase 1 Complete: Implemented PayPal and Email OTP integration. Testing focus: 1) Registration flow with email OTP (mock mode - OTP logged to console, use code 123456). 2) OTP verification with max 5 attempts, 10 min expiry. 3) Resend OTP with 60-second cooldown. 4) PayPal order creation (will return 503 if PayPal not configured). 5) Idempotent payment verification. Admin: admin@africaonevoice.com/admin123, Voter: voter@test.com/voter123"
