@@ -33,6 +33,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
   const [otpCode, setOtpCode] = useState('');
