@@ -39,38 +39,64 @@ export async function GET(request) {
         { $limit: limit },
       ]);
 
-      const contestantIds = votesByContestant.map(v => v._id);
-      
-      // Get contestant details
-      const contestantQuery = { 
-        _id: { $in: contestantIds },
-        status: 'APPROVED',
-      };
-      if (category) contestantQuery.category = category;
-      if (country) contestantQuery.country = country;
+      // If no round-specific votes, fall back to overall votes
+      if (votesByContestant.length === 0) {
+        const query = { status: 'APPROVED' };
+        if (category) query.category = category;
+        if (country) query.country = country;
 
-      const contestants = await ContestantProfile.find(contestantQuery).lean();
-      const contestantMap = contestants.reduce((acc, c) => ({ ...acc, [c._id]: c }), {});
+        const contestants = await ContestantProfile.find(query)
+          .sort({ totalVotes: -1 })
+          .limit(limit)
+          .lean();
 
-      // Get user names
-      const userIds = contestants.map(c => c.userId);
-      const users = await User.find({ _id: { $in: userIds } }).select('name').lean();
-      const userMap = users.reduce((acc, u) => ({ ...acc, [u._id]: u }), {});
+        const userIds = contestants.map(c => c.userId);
+        const users = await User.find({ _id: { $in: userIds } }).select('name').lean();
+        const userMap = users.reduce((acc, u) => ({ ...acc, [u._id]: u }), {});
 
-      leaderboardData = votesByContestant
-        .filter(v => contestantMap[v._id])
-        .map((v, index) => {
-          const contestant = contestantMap[v._id];
-          return {
-            rank: index + 1,
-            contestant: {
-              ...contestant,
-              userName: userMap[contestant.userId]?.name,
-            },
-            roundVotes: v.roundVotes,
-            totalVotes: contestant.totalVotes,
-          };
-        });
+        leaderboardData = contestants.map((c, index) => ({
+          rank: index + 1,
+          contestant: {
+            ...c,
+            userName: userMap[c.userId]?.name,
+          },
+          roundVotes: 0, // No round votes yet
+          totalVotes: c.totalVotes,
+        }));
+      } else {
+        const contestantIds = votesByContestant.map(v => v._id);
+        
+        // Get contestant details
+        const contestantQuery = { 
+          _id: { $in: contestantIds },
+          status: 'APPROVED',
+        };
+        if (category) contestantQuery.category = category;
+        if (country) contestantQuery.country = country;
+
+        const contestants = await ContestantProfile.find(contestantQuery).lean();
+        const contestantMap = contestants.reduce((acc, c) => ({ ...acc, [c._id]: c }), {});
+
+        // Get user names
+        const userIds = contestants.map(c => c.userId);
+        const users = await User.find({ _id: { $in: userIds } }).select('name').lean();
+        const userMap = users.reduce((acc, u) => ({ ...acc, [u._id]: u }), {});
+
+        leaderboardData = votesByContestant
+          .filter(v => contestantMap[v._id])
+          .map((v, index) => {
+            const contestant = contestantMap[v._id];
+            return {
+              rank: index + 1,
+              contestant: {
+                ...contestant,
+                userName: userMap[contestant.userId]?.name,
+              },
+              roundVotes: v.roundVotes,
+              totalVotes: contestant.totalVotes,
+            };
+          });
+      }
     } else {
       // Overall leaderboard (no active round)
       const query = { status: 'APPROVED' };
