@@ -5,7 +5,7 @@ import { connectDB } from '@/lib/db';
 import Transaction from '@/lib/models/Transaction';
 import ContestantProfile from '@/lib/models/ContestantProfile';
 import Round from '@/lib/models/Round';
-import { createPayPalOrder, generateOrderReference } from '@/lib/paypal';
+import { createPayPalOrder, generateOrderReference, isPayPalConfigured, getPayPalInfo } from '@/lib/paypal';
 import { getSetting } from '@/lib/helpers';
 import { paymentRateLimiter } from '@/lib/rate-limit';
 
@@ -18,6 +18,19 @@ import { paymentRateLimiter } from '@/lib/rate-limit';
  */
 export async function POST(request) {
   try {
+    // Check if PayPal is configured
+    if (!isPayPalConfigured()) {
+      const info = getPayPalInfo();
+      return NextResponse.json(
+        { 
+          error: 'Payment system not configured', 
+          message: 'PayPal credentials are not set. Please contact support.',
+          paypalMode: info.mode,
+        },
+        { status: 503 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
