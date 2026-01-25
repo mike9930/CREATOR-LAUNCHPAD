@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Facebook, Twitter, Instagram, Mail } from 'lucide-react';
 
 export default function Footer() {
@@ -8,16 +9,20 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 rounded-full gradient-africa flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
-              </div>
+            <Link href="/" className="flex items-center space-x-2 mb-4">
+              <Image
+                src="/images/aov-logo.png"
+                alt="Africa One Voice – Pan-African Talent Show"
+                width={56}
+                height={56}
+                className="h-14 w-auto"
+              />
               <span className="font-bold text-xl">
                 <span className="text-green-500">Africa</span>
                 <span className="text-yellow-500"> One</span>
                 <span className="text-red-500"> Voice</span>
               </span>
-            </div>
+            </Link>
             <p className="text-gray-400 max-w-md">
               The premier pan-African digital talent show. Discover, support, and vote for Africa's brightest talents.
               Total prize pool of ₦1,000,000!
