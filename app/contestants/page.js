@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Search, Filter, Music, Vote, Loader2 } from 'lucide-react';
-import { AFRICAN_COUNTRIES, CATEGORIES } from '@/lib/helpers';
+import { AFRICAN_COUNTRIES, CATEGORIES } from '@/lib/constants';
 
 export default function ContestantsPage() {
   const [contestants, setContestants] = useState([]);
