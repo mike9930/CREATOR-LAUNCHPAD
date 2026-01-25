@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Mail, Lock, User, Phone, MapPin, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { AFRICAN_COUNTRIES } from '@/lib/helpers';
+import { AFRICAN_COUNTRIES } from '@/lib/constants';
 
 export default function RegisterPage() {
   const router = useRouter();
