@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, Lock, User, Phone, MapPin, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Phone, Eye, EyeOff, CheckCircle, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { AFRICAN_COUNTRIES } from '@/lib/constants';
 
@@ -26,16 +26,18 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
+    phone: '', // Optional
     country: '',
     role: defaultRole === 'CONTESTANT' ? 'CONTESTANT' : 'VOTER',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpHint, setOtpHint] = useState('');
+  const [attemptsRemaining, setAttemptsRemaining] = useState(5);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -66,7 +68,7 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          phone: formData.phone,
+          phone: formData.phone || undefined, // Phone is optional
           country: formData.country,
           role: formData.role,
         }),
@@ -105,6 +107,9 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.attemptsRemaining !== undefined) {
+          setAttemptsRemaining(data.attemptsRemaining);
+        }
         throw new Error(data.error || 'Verification failed');
       }
 
@@ -113,6 +118,36 @@ export default function RegisterPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setResending(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to resend code');
+      }
+
+      setAttemptsRemaining(5); // Reset attempts
+      if (data.devOtpHint) {
+        setOtpHint(data.devOtpHint);
+      }
+      setError(''); // Clear any previous errors
+      alert('A new verification code has been sent to your email.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -133,12 +168,12 @@ export default function RegisterPage() {
             </Link>
             <CardTitle className="text-2xl">
               {step === 1 && 'Create Account'}
-              {step === 2 && 'Verify Phone'}
+              {step === 2 && 'Verify Email'}
               {step === 3 && 'Success!'}
             </CardTitle>
             <CardDescription>
               {step === 1 && 'Join Africa One Voice today'}
-              {step === 2 && 'Enter the verification code'}
+              {step === 2 && `Enter the code sent to ${formData.email}`}
               {step === 3 && 'Your account is ready'}
             </CardDescription>
           </CardHeader>
@@ -171,7 +206,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Full Name *</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -187,7 +222,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -201,10 +236,11 @@ export default function RegisterPage() {
                       required
                     />
                   </div>
+                  <p className="text-xs text-gray-500">We'll send a verification code to this email</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number (Optional)</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -233,7 +269,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Password *</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -257,7 +293,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -283,7 +319,7 @@ export default function RegisterPage() {
               </form>
             )}
 
-            {/* Step 2: OTP Verification */}
+            {/* Step 2: Email OTP Verification */}
             {step === 2 && (
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 {error && (
@@ -300,30 +336,50 @@ export default function RegisterPage() {
                   </Alert>
                 )}
 
+                <div className="text-center mb-4">
+                  <Mail className="w-12 h-12 mx-auto text-green-600 mb-2" />
+                  <p className="text-gray-600">Check your email for the 6-digit code</p>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="otp">Verification Code</Label>
                   <Input
                     id="otp"
                     value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Enter 6-digit code"
                     maxLength={6}
                     className="text-center text-2xl tracking-widest"
                     required
                   />
+                  <p className="text-xs text-gray-500 text-center">
+                    {attemptsRemaining} attempts remaining • Code expires in 10 minutes
+                  </p>
                 </div>
 
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
+                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading || otpCode.length !== 6}>
                   {loading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</>
                   ) : (
-                    'Verify'
+                    'Verify Email'
                   )}
                 </Button>
 
-                <Button type="button" variant="ghost" className="w-full" onClick={() => setStep(3)}>
-                  Skip for now
-                </Button>
+                <div className="text-center">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={handleResendOtp}
+                    disabled={resending}
+                    className="text-green-600"
+                  >
+                    {resending ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
+                    ) : (
+                      <><RefreshCw className="w-4 h-4 mr-2" /> Resend Code</>
+                    )}
+                  </Button>
+                </div>
               </form>
             )}
 
@@ -333,7 +389,7 @@ export default function RegisterPage() {
                 <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
                   <CheckCircle className="w-10 h-10 text-green-600" />
                 </div>
-                <p className="text-gray-600">Your account has been created successfully!</p>
+                <p className="text-gray-600">Your email has been verified! You can now sign in.</p>
                 <div className="space-y-2">
                   <Link href="/auth/login">
                     <Button className="w-full bg-green-600 hover:bg-green-700">Sign In</Button>
