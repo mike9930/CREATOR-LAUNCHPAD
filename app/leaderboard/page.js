@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Trophy, Medal, Vote, Loader2, TrendingUp, Filter } from 'lucide-react';
-import { AFRICAN_COUNTRIES, CATEGORIES } from '@/lib/helpers';
+import { AFRICAN_COUNTRIES, CATEGORIES } from '@/lib/constants';
 
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState([]);
