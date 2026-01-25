@@ -391,11 +391,13 @@ export default function RegisterPage() {
                     type="button" 
                     variant="ghost" 
                     onClick={handleResendOtp}
-                    disabled={resending}
+                    disabled={resending || resendCooldown > 0}
                     className="text-green-600"
                   >
                     {resending ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
+                    ) : resendCooldown > 0 ? (
+                      <><RefreshCw className="w-4 h-4 mr-2" /> Resend in {resendCooldown}s</>
                     ) : (
                       <><RefreshCw className="w-4 h-4 mr-2" /> Resend Code</>
                     )}
