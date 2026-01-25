@@ -123,6 +123,8 @@ export default function RegisterPage() {
   };
 
   const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    
     setResending(true);
     setError('');
 
@@ -136,6 +138,10 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        // If rate limited with waitSeconds, set cooldown
+        if (data.waitSeconds) {
+          setResendCooldown(data.waitSeconds);
+        }
         throw new Error(data.error || 'Failed to resend code');
       }
 
@@ -144,13 +150,27 @@ export default function RegisterPage() {
         setOtpHint(data.devOtpHint);
       }
       setError(''); // Clear any previous errors
-      alert('A new verification code has been sent to your email.');
+      
+      // Start 60-second cooldown
+      setResendCooldown(60);
+      
+      // Show success message instead of alert
     } catch (err) {
       setError(err.message);
     } finally {
       setResending(false);
     }
   };
+
+  // Cooldown timer effect
+  React.useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   return (
     <div className="min-h-screen bg-gray-50">
