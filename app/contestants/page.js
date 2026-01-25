@@ -82,23 +82,23 @@ export default function ContestantsPage() {
                   className="pl-10"
                 />
               </div>
-              <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
+              <Select value={category || 'all'} onValueChange={(v) => { setCategory(v === 'all' ? '' : v); setPage(1); }}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={country} onValueChange={(v) => { setCountry(v); setPage(1); }}>
+              <Select value={country || 'all'} onValueChange={(v) => { setCountry(v === 'all' ? '' : v); setPage(1); }}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="All Countries" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Countries</SelectItem>
+                  <SelectItem value="all">All Countries</SelectItem>
                   {AFRICAN_COUNTRIES.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
